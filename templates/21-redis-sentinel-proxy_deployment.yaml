@@ -1,0 +1,27 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis-sentinel-proxy
+  labels:
+    app: redis-sentinel-proxy
+spec:
+  replicas: {{ pluck .Values.global.env .Values.redis.sentinel_proxy.replicas | first | default .Values.redis.sentinel_proxy.replicas._default }}
+  selector:
+    matchLabels:
+      app: redis-sentinel-proxy
+  template:
+    metadata:
+      labels:
+        app: redis-sentinel-proxy
+    spec:
+      containers:
+      - name: redis-sentinel-proxy
+        image: anubhavmishra/redis-sentinel-proxy:latest
+        args:
+          - "-master"
+          - "mymaster"
+          - "-sentinel"
+          - {{ printf "rfs-%s-redis:26379" .Chart.Name | quote }}
+        ports:
+        - containerPort: {{ pluck .Values.global.env .Values.redis.sentinel_proxy.port | first | default .Values.redis.sentinel_proxy.port._default }}

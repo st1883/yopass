@@ -1,0 +1,117 @@
+global:
+  env: dev
+
+app:
+  autoscaler:
+    hpa:
+      enabled:
+        _default: false
+        stage: true
+        production: true
+      hpa_target_cpu:
+        _default: 150m
+    vpa:
+      enabled:
+        _default: false
+        stage: true
+        production: true
+  image:
+    version:
+      _default: "11.1.2"
+  ingress:
+    enabled:
+      _default: false
+      stage: true
+      production: true
+    domain:
+      _default: yopass.dev.mydomain.com
+      stage: yopass.stage.mydomain.com
+      production: yopass.mydomain.com
+    ssl:
+      enabled:
+        _default: true
+      redirect:
+        _default: true
+  replicas:
+    count:
+      _default: 1
+      stage: 3
+      production: 3
+    max_count:
+      _default: 5
+    max_surge:
+      _default: 1
+    max_unavailable:
+      _default: 1
+    min_available:
+      _default: 2
+  resources:
+    requests:
+      cpu:
+        _default: 50m
+      memory:
+        _default: 128Mi
+    limits:
+      cpu:
+        _default: 200m
+      memory:
+        _default: 128Mi
+  port:
+    _default: "1137"
+  metrics_port:
+    _default: "1137"
+
+redis:
+  exporter:
+    image:
+      version:
+        _default: "v1.3.5"
+  failover:
+    image:
+      version:
+        _default: "5.0"
+    replicas:
+      _default: 3
+    resources:
+      requests:
+        cpu:
+          _default: 100m
+        memory:
+          _default: 1Gi
+      limits:
+        cpu:
+          _default: 400m
+        memory:
+          _default: 1Gi
+      storage:
+        _default: 2Gi
+  sentinel:
+    replicas:
+      _default: 3
+    resources:
+      requests:
+        cpu:
+          _default: 100m
+        memory:
+          _default: 128Mi
+      limits:
+        cpu:
+          _default: 400m
+        memory:
+          _default: 128Mi
+  sentinel_proxy:
+    port:
+      _default: "6379"
+    replicas:
+      _default: 3
+    resources:
+      requests:
+        cpu:
+          _default: 100m
+        memory:
+          _default: 128Mi
+      limits:
+        cpu:
+          _default: 400m
+        memory:
+          _default: 128Mi

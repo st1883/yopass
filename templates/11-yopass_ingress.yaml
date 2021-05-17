@@ -1,0 +1,25 @@
+{{- if .Values.app.ingress.enabled }}
+---
+apiVersion: networking.k8s.io/v1beta1
+kind: Ingress
+metadata:
+  name: {{ .Chart.Name | quote }}
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: {{ pluck .Values.global.env .Values.app.ingress.ssl.redirect | first | default .Values.app.ingress.ssl.redirect._default | quote }}
+    kubernetes.io/ingress.class: nginx
+spec:
+{{- if ( pluck .Values.global.env .Values.app.ingress.ssl.enabled | first | default .Values.app.ingress.ssl.enabled._default ) }}
+  tls:
+   - hosts:
+     - {{ pluck .Values.global.env .Values.app.ingress.domain | first | default .Values.app.ingress.domain._default | quote }}
+     secretName: {{ printf "%s-tls" .Chart.Name }}
+{{- end }}
+  rules:
+  - host: {{ pluck .Values.global.env .Values.app.ingress.domain | first | default .Values.app.ingress.domain._default | quote }}
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: {{ .Chart.Name | quote }}
+          servicePort: {{ pluck .Values.global.env .Values.app.port | first | default .Values.app.port._default }}
+{{- end }}

@@ -1,0 +1,14 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis-sentinel-proxy
+  labels:
+    app: redis-sentinel-proxy
+spec:
+  type: ClusterIP
+  ports:
+  - port: {{ pluck .Values.global.env .Values.redis.sentinel_proxy.port | first | default .Values.redis.sentinel_proxy.port._default }}
+    name: redis-sentinel-proxy
+  selector:
+    app: redis-sentinel-proxy

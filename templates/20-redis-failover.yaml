@@ -1,0 +1,41 @@
+---
+apiVersion: databases.spotahome.com/v1
+kind: RedisFailover
+metadata:
+  name: {{ printf "%s-redis" .Chart.Name | quote }}
+spec:
+  hardAntiAffinity: true
+  sentinel:
+    replicas: {{ pluck .Values.global.env .Values.redis.sentinel.replicas | first | default .Values.redis.sentinel.replicas._default }}
+    image: {{ printf "redis:%s" ( pluck .Values.global.env .Values.redis.failover.image.version | first | default .Values.redis.failover.image.version._default ) | quote }}
+    customConfig: []
+{{- include "resources_redis_sentinel" . | indent 4 }}
+{{- include "tolerations_production" . | indent 4 }}
+{{- include "nodeselector_production" . | indent 4 }}
+  redis:
+    replicas: {{ pluck .Values.global.env .Values.redis.failover.replicas | first | default .Values.redis.failover.replicas._default }}
+    image: {{ printf "redis:%s" ( pluck .Values.global.env .Values.redis.failover.image.version | first | default .Values.redis.failover.image.version._default ) | quote }}
+    exporter:
+      enabled: true
+      image: {{ printf "oliver006/redis_exporter:%s" ( pluck .Values.global.env .Values.redis.exporter.image.version | first | default .Values.redis.exporter.image.version._default ) | quote }}
+    securityContext:
+      fsGroup: 1000
+      runAsGroup: 1000
+      runAsNonRoot: true
+      runAsUser: 1000
+    storage:
+      persistentVolumeClaim:
+        metadata:
+          name: {{ printf "%s-redis-%s-data" .Chart.Name .Values.global.env | quote }}
+        spec:
+          accessModes:
+            - ReadWriteOnce
+          keepAfterDeletion: true
+          persistentVolumeReclaimPolicy: Retain
+          resources:
+            requests:
+              storage: {{ pluck .Values.global.env .Values.redis.failover.resources.storage | first | default .Values.redis.failover.resources.storage._default }}
+    customConfig: []
+{{- include "resources_redis_failover" . | indent 4 }}
+{{- include "tolerations_production" . | indent 4 }}
+{{- include "nodeselector_production" . | indent 4 }}

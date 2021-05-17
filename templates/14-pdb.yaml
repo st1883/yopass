@@ -1,0 +1,15 @@
+{{- if eq .Values.global.env "production" }}
+---
+apiVersion: policy/v1beta1
+kind: PodDisruptionBudget
+metadata:
+  annotations:
+    helm.sh/hook: post-upgrade, post-install
+    helm.sh/hook-delete-policy: before-hook-creation
+  name: {{ .Chart.Name | quote }}
+spec:
+  minAvailable: {{ pluck .Values.global.env .Values.app.replicas.min_available | first | default .Values.app.replicas.min_available._default }}
+  selector:
+    matchLabels:
+      app: {{ .Chart.Name | quote }}
+{{- end }}

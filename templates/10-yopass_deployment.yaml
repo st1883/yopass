@@ -1,0 +1,40 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Chart.Name | quote }}
+  labels:
+    app: {{ .Chart.Name | quote }}
+spec:
+  replicas: {{ pluck .Values.global.env .Values.app.replicas.count | first | default .Values.app.replicas.count._default }}
+  selector:
+    matchLabels:
+      app: {{ .Chart.Name | quote }}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: {{ pluck .Values.global.env .Values.app.replicas.max_surge | first | default .Values.app.replicas.max_surge._default }}
+      maxUnavailable: {{ pluck .Values.global.env .Values.app.replicas.max_unavailable | first | default .Values.app.replicas.max_unavailable._default }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Chart.Name | quote }}
+    spec:
+{{- include "tolerations_production" . | indent 6 }}
+{{- include "nodeselector_production" . | indent 6 }}
+{{- include "affinity_app" . | indent 6 }}
+      containers:
+      - name: {{ .Chart.Name | quote }}
+        image: {{ printf "jhaals/yopass:%s" ( pluck .Values.global.env .Values.app.image.version | first | default .Values.app.image.version._default ) | quote }}
+        args:
+        - {{ printf "--port=%s" ( pluck .Values.global.env .Values.app.port | first | default .Values.app.port._default ) | quote }}
+        - "--database=redis"
+        - {{ printf "--redis=redis://redis-sentinel-proxy:%s/0" (pluck .Values.global.env .Values.redis.sentinel_proxy.port | first | default .Values.redis.sentinel_proxy.port._default) | quote }}
+        - {{ printf "--metrics-port=%s" ( pluck .Values.global.env .Values.app.metrics_port | first | default .Values.app.metrics_port._default ) | quote }}
+        ports:
+        - name: http
+          containerPort: {{ pluck .Values.global.env .Values.app.port | first | default .Values.app.port._default }}
+        - name: http-metrics
+          containerPort: {{ pluck .Values.global.env .Values.app.metrics_port | first | default .Values.app.metrics_port._default }}
+{{- include "probes_app" . | indent 8 }}
+{{- include "resources_app" . | indent 8 }}
